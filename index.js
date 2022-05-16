@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const app = express()
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
@@ -19,7 +20,19 @@ async function run() {
     try {
         const databaseCollection = client.db("doctor_portal").collection("service");
         const bookingCollection = client.db("doctor_portal").collection("booking");
+        const userCollection = client.db("doctor_portal").collection("users");
 
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email
+            const user = req.body
+            const filter = { email: email }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: user
+            }
+            const result = await userCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+        })
         app.post('/booking', async (req, res) => {
             const booking = req.body
             const query = { treatment: booking.treatment, date: booking.date, patient: booking.patient }
