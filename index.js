@@ -31,6 +31,38 @@ async function run() {
             return res.send({ success: true, result })
         })
 
+        app.get('/available', async (req, res) => {
+            const date = req.query.date
+            //step: 1 to get all array
+            const services = await databaseCollection.find().toArray()
+            //step: 2 get the booking of that day
+            const query = { date: date }
+            const bookings = await bookingCollection.find(query).toArray()
+            //step: 3 for each service,
+
+            services.forEach(service => {
+                //step: find booking for that service
+                const serviceBookings = bookings.filter(book => book.treatment === service.name)
+                //step: 5 select slots for the service booking 
+                const bookedSlots = serviceBookings.map(book => book.slot)
+                // console.log(bookedSlots)
+                //step: 6 select those slot that are not in book slot
+                const available = service.slots.filter(slot => !bookedSlots.includes(slot))
+
+                //step: set available to slots make it easier    
+                service.slots = available
+
+            })
+            res.send(services)
+        })
+
+        app.get('/booking', async (req, res) => {
+            const patient = req.query.patient
+            const query = { patient: patient }
+            const bookings = await bookingCollection.find(query).toArray()
+            res.send(bookings)
+        })
+
         app.get('/service', async (req, res) => {
             const query = {}
             const cursor = databaseCollection.find(query)
